@@ -2,6 +2,10 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { showToast } from 'vant'
+import { useRouter } from 'vue-router' // 导入路由
+
+// 获取路由实例
+const router = useRouter()
 
 // 数据
 const searchValue = ref('')
@@ -92,6 +96,14 @@ const onTabChange = (index) => {
   getProducts()
 }
 
+// 跳转到分类页面
+const goToCategory = (category) => {
+  router.push({
+    name: 'category',
+    query: { categoryId: category.id }
+  })
+}
+
 onMounted(() => {
   getBanners()
   getCategories()
@@ -129,10 +141,22 @@ onMounted(() => {
     <!-- 商品分类 -->
     <div class="category-container">
       <van-grid :column-num="5" :border="false">
-        <van-grid-item v-for="category in categories.slice(0, 5)" :key="category.id" :icon="category.icon" :text="category.name" />
+        <van-grid-item 
+          v-for="category in categories.slice(0, 5)" 
+          :key="category.id" 
+          :icon="category.icon" 
+          :text="category.name"
+          @click="goToCategory(category)" 
+        />
       </van-grid>
       <van-grid :column-num="5" :border="false">
-        <van-grid-item v-for="category in categories.slice(5, 10)" :key="category.id" :icon="category.icon" :text="category.name" />
+        <van-grid-item 
+          v-for="category in categories.slice(5, 10)" 
+          :key="category.id" 
+          :icon="category.icon" 
+          :text="category.name"
+          @click="goToCategory(category)" 
+        />
       </van-grid>
     </div>
 

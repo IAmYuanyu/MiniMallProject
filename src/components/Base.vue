@@ -21,17 +21,11 @@ const active = ref(0);
 .base-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Ensure full viewport height */
+  height: 100vh;
 }
 
-/* Ensure router-view takes up available space above tabbar */
 .base-layout > :first-child {
   flex-grow: 1;
-  overflow-y: auto; /* Allow scrolling for content */
+  overflow-y: auto;
 }
-
-/* Optional: Add some padding to the content area if needed */
-/* .base-layout > :first-child {
-  padding-bottom: 50px; /* Adjust based on tabbar height */
-/*}*/
 </style>

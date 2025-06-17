@@ -35,6 +35,9 @@ const products = Mock.mock({
     }]
 }).list; // 最终提取 `list` 数组赋值给 `products`
 
+// 初始化购物车数据
+let cartItems = []
+
 // 模拟搜索接口
 Mock.mock(/\/api\/search/, 'get', (options) => {
   const url = new URL(options.url, 'http://example.com')
@@ -103,15 +106,138 @@ Mock.mock(/\/api\/products\/\d+/, 'get', (options) => {
 // 模拟添加到购物车接口
 Mock.mock('/api/cart/add', 'post', (options) => {
   const { productId, quantity } = JSON.parse(options.body)
+  const product = products.find(item => item.id === productId);
+  
+  if (!product) {
+    return {
+      code: 404,
+      message: '商品不存在'
+    }
+  }
+  
+  // 检查购物车中是否已存在该商品
+  const existingItem = cartItems.find(item => item.productId === productId);
+  
+  if (existingItem) {
+    // 如果已存在，更新数量
+    existingItem.quantity += quantity;
+    return {
+      code: 200,
+      data: existingItem,
+      message: '添加成功'
+    }
+  } else {
+    // 如果不存在，添加新项
+    const newItem = {
+      id: Mock.Random.guid(),
+      productId,
+      product,
+      quantity,
+      selected: true
+    };
+    cartItems.push(newItem);
+    return {
+      code: 200,
+      data: newItem,
+      message: '添加成功'
+    }
+  }
+})
+
+// 获取购物车列表
+Mock.mock('/api/cart', 'get', () => {
+  return {
+    code: 200,
+    data: cartItems,
+    message: '获取成功'
+  }
+})
+
+// 更新购物车商品数量
+Mock.mock(/\/api\/cart\/update/, 'post', (options) => {
+  const { id, quantity } = JSON.parse(options.body)
+  const item = cartItems.find(item => item.id === id)
+  
+  if (item) {
+    item.quantity = quantity
+    return {
+      code: 200,
+      data: item,
+      message: '更新成功'
+    }
+  } else {
+    return {
+      code: 404,
+      message: '购物车商品不存在'
+    }
+  }
+})
+
+// 更新购物车商品选中状态
+Mock.mock('/api/cart/select', 'post', (options) => {
+  const { id, selected } = JSON.parse(options.body)
+  
+  if (id === 'all') {
+    // 全选/取消全选
+    cartItems.forEach(item => item.selected = selected)
+    return {
+      code: 200,
+      data: cartItems,
+      message: '更新成功'
+    }
+  } else {
+    const item = cartItems.find(item => item.id === id)
+    if (item) {
+      item.selected = selected
+      return {
+        code: 200,
+        data: item,
+        message: '更新成功'
+      }
+    } else {
+      return {
+        code: 404,
+        message: '购物车商品不存在'
+      }
+    }
+  }
+})
+
+// 从购物车中删除商品
+Mock.mock('/api/cart/remove', 'post', (options) => {
+  const { id } = JSON.parse(options.body)
+  const index = cartItems.findIndex(item => item.id === id)
+  
+  if (index !== -1) {
+    cartItems.splice(index, 1)
+    return {
+      code: 200,
+      message: '删除成功'
+    }
+  } else {
+    return {
+      code: 404,
+      message: '购物车商品不存在'
+    }
+  }
+})
+
+// 结算接口
+Mock.mock('/api/cart/checkout', 'post', (options) => {
+  const selectedItems = cartItems.filter(item => item.selected)
+  const totalAmount = selectedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  
+  // 模拟结算后清空已选商品
+  cartItems = cartItems.filter(item => !item.selected)
   
   return {
     code: 200,
     data: {
-      cartId: Mock.Random.guid(),
-      productId,
-      quantity
+      orderNo: Mock.Random.string('number', 16),
+      totalAmount,
+      items: selectedItems
     },
-    message: '添加成功'
+    message: '结算成功'
   }
 })
 

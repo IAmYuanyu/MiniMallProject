@@ -9,8 +9,6 @@ import './mock' // 引入mock数据
 
 import App from './App.vue'
 import router from './router'
-import loadIconFont from './utils/iconfont'
-loadIconFont()
 
 // 配置axios
 axios.defaults.baseURL = '/api'
