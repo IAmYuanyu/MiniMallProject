@@ -2,16 +2,16 @@ import Mock from 'mockjs'
 
 // 模拟商品分类数据
 const categories = [
-  { id: 1, name: '餐饮美食', icon: 'food-o' },
-  { id: 2, name: '乳品烘焙', icon: 'cake-o' },
-  { id: 3, name: '美妆百货', icon: 'gift-o' },
-  { id: 4, name: '酒水饮料', icon: 'coffee-o' },
-  { id: 5, name: '粮油调味', icon: 'shop-o' },
-  { id: 6, name: '冰品面点', icon: 'ice-cream-o' },
-  { id: 7, name: '海鲜水产', icon: 'fish-o' },
-  { id: 8, name: '肉禽蛋品', icon: 'fire-o' },
-  { id: 9, name: '新鲜蔬菜', icon: 'flower-o' },
-  { id: 10, name: '时令水果', icon: 'apple-o' }
+  { id: 1, name: '餐饮美食', icon: '/icons/餐饮美食.svg' },
+  { id: 2, name: '乳品烘焙', icon: '/icons/乳品烘焙.svg' },
+  { id: 3, name: '美妆百货', icon: '/icons/美妆百货.svg' },
+  { id: 4, name: '酒水饮料', icon: '/icons/酒水饮料.svg' },
+  { id: 5, name: '粮油调味', icon: '/icons/粮油调味.svg' },
+  { id: 6, name: '冰品面点', icon: '/icons/冰品面点.svg' },
+  { id: 7, name: '海鲜水产', icon: '/icons/海鲜水产.svg' },
+  { id: 8, name: '肉禽蛋品', icon: '/icons/肉禽蛋品.svg' },
+  { id: 9, name: '新鲜蔬菜', icon: '/icons/新鲜蔬菜.svg' },
+  { id: 10, name: '时令水果', icon: '/icons/时令水果.svg' }
 ]
 
 // 模拟轮播图数据
@@ -23,17 +23,17 @@ const banners = [
 
 // 模拟商品数据
 const products = Mock.mock({
-  'list|30': [{
-    'id|+1': 1,
-    'title': '@ctitle(5, 10)',
-    'price|1-100.1-2': 1,
-    'image': 'https://img01.yzcdn.cn/vant/ipad.jpeg',
-    'category_id|1-10': 1,
-    'sales|30-500': 30,
-    'stock|10-100': 10,
-    'description': '@cparagraph(1, 3)'
-  }]
-}).list
+    'list|30': [{
+        'id|+1': 1,                      // 自增 ID，从 1 开始
+        'title': '@ctitle(5, 10)',       // 随机生成 5-10 个汉字的中文标题
+        'price|1-100.1-2': 1,           // 随机价格（1-100，小数点后 1-2 位）
+        'image': 'https://img01.yzcdn.cn/vant/ipad.jpeg', // 固定图片 URL
+        'category_id|1-10': 1,          // 随机分类 ID（1-10 的整数）
+        'sales|30-500': 30,             // 随机销量（30-500 的整数）
+        'stock|10-100': 10,             // 随机库存（10-100 的整数）
+        'description': '@cparagraph(1, 3)' // 随机生成 1-3 段中文描述
+    }]
+}).list; // 最终提取 `list` 数组赋值给 `products`
 
 // 模拟搜索接口
 Mock.mock(/\/api\/search/, 'get', (options) => {
