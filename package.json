@@ -9,7 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vant/weapp": "^1.11.7",
     "pinia": "^3.0.1",
+    "vant": "^4.9.20",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
