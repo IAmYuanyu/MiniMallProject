@@ -423,48 +423,99 @@ Mock.mock('/api/orders', 'get', () => {
   return {
     code: 200,
     data: ordersList.length > 0 ? ordersList : [
-      // 如果localStorage中没有订单数据，则返回默认的示例订单
+      // 第一笔订单
       {
-        id: Mock.Random.guid(),
-        title: '羊排 1000g',
-        thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/ipad.jpeg',
-        price: 120.00,
-        quantity: 2,
+        orderId: Mock.Random.guid(),
+        orderNo: Mock.Random.string('number', 16),
+        createTime: Mock.Random.datetime(),
         status: 1,
-        createTime: Mock.Random.datetime()
+        items: [
+          {
+            id: "C8FadADf-6Bc6-Fa86-6c36-7Bba7b908B3A",
+            title: "确新北看特六拉专农口",
+            thumb: "https://img01.yzcdn.cn/vant/ipad.jpeg",
+            price: 76.4,
+            quantity: 1,
+            status: 1,
+            createTime: "2025-01-19 10:23:13"
+          },
+          {
+            id: "27B194B1-641D-3DFE-cBFd-93Cc8cB3c5BF",
+            title: "过千单形子面",
+            thumb: "https://img01.yzcdn.cn/vant/ipad.jpeg",
+            price: 9.9,
+            quantity: 1,
+            status: 1,
+            createTime: "1991-06-10 08:10:45"
+          },
+          {
+            id: "6BcF2ddf-E8e1-feF2-d1Eb-56F2A855ceea",
+            title: "果我铁属做如",
+            thumb: "https://img01.yzcdn.cn/vant/ipad.jpeg",
+            price: 96.69,
+            quantity: 1,
+            status: 1,
+            createTime: "2001-02-15 18:18:22"
+          }
+        ]
       },
+      // 第二笔订单
       {
-        id: Mock.Random.guid(),
-        title: '猪瘦肉',
-        thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg',
-        price: 80.00,
-        quantity: 4,
-        status: 2,
-        createTime: Mock.Random.datetime()
-      },
-      {
-        id: Mock.Random.guid(),
-        title: '龙虾',
-        thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-2.jpeg',
-        price: 160.00,
-        quantity: 3,
-        status: 3,
-        createTime: Mock.Random.datetime()
+        orderId: Mock.Random.guid(),
+        orderNo: Mock.Random.string('number', 16),
+        createTime: Mock.Random.datetime(),
+        status: 1,
+        items: [
+          {
+            id: Mock.Random.guid(),
+            title: '羊排 1000g',
+            thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/ipad.jpeg',
+            price: 120.00,
+            quantity: 2,
+            status: 1,
+            createTime: Mock.Random.datetime()
+          },
+          {
+            id: Mock.Random.guid(),
+            title: '猪瘦肉',
+            thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg',
+            price: 80.00,
+            quantity: 4,
+            status: 2,
+            createTime: Mock.Random.datetime()
+          },
+          {
+            id: Mock.Random.guid(),
+            title: '龙虾',
+            thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-2.jpeg',
+            price: 160.00,
+            quantity: 3,
+            status: 3,
+            createTime: Mock.Random.datetime()
+          }
+        ]
       }
     ],
   };
 });
 
 // 模拟提交订单API
+// 模拟提交订单API
 Mock.mock('/api/order/submit', 'post', (options) => {
   const { addressId, items } = JSON.parse(options.body);
-  console.log("items", items);
   
+  // 获取当前时间作为订单创建时间
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const currentTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   
   // 获取购物车中的商品详情
   const orderItems = items.map(item => {
-    // const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
-    // if (!cartItem) return null;
     const cartItem = item
     
     return {
@@ -474,18 +525,24 @@ Mock.mock('/api/order/submit', 'post', (options) => {
       price: cartItem.product.price,
       quantity: cartItem.quantity,
       status: 1, // 1: 待发货
-      createTime: Mock.Random.datetime()
+      createTime: currentTime // 使用提交订单时的当前时间
     };
-  }).filter(Boolean); // 过滤掉null值
-  console.log("orderItems", orderItems);
+  }).filter(Boolean);
 
-  
+  // 创建新订单对象
+  const newOrder = {
+    orderId: Mock.Random.guid(),
+    orderNo: Mock.Random.string('number', 16),
+    createTime: currentTime, // 使用提交订单时的当前时间
+    status: 1,
+    items: orderItems
+  };
   
   // 获取现有订单列表或创建新的空数组
   let ordersList = JSON.parse(localStorage.getItem('orders')) || [];
   
-  // 将新订单添加到订单列表
-  ordersList = [...orderItems, ...ordersList];
+  // 将新订单添加到订单列表开头
+  ordersList.unshift(newOrder);
   
   // 保存更新后的订单列表
   localStorage.setItem('orders', JSON.stringify(ordersList));
@@ -501,7 +558,7 @@ Mock.mock('/api/order/submit', 'post', (options) => {
   return {
     code: 200,
     data: {
-      orderNo: Mock.Random.string('number', 16),
+      orderNo: newOrder.orderNo,
       orderItems
     },
     message: '下单成功'

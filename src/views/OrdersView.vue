@@ -8,19 +8,28 @@
       />
     </div>
     
-    <div v-if="orders.length > 0" class="order-card">
-      <div v-for="order in orders" :key="order.id" class="order-item">
-        <div class="product-info">
-          <img :src="order.thumb" class="product-image" />
-          <div class="product-details">
-            <div class="product-title">{{ order.title }}</div>
-            <div class="product-price">¥{{ order.price.toFixed(2) }}</div>
-          </div>
-          <div class="product-quantity">x{{ order.quantity }}</div>
+    <div v-if="orders.length > 0" class="orders-list">
+      <!-- 遍历每个订单 -->
+      <div v-for="order in orders" :key="order.orderId" class="order-card">
+        <div class="order-header">
+          <div class="order-time">{{ order.createTime }}</div>
         </div>
-      </div>
-      <div class="order-total">
-        实付款：¥ {{ calculateTotal() }}
+        
+        <!-- 遍历订单中的商品 -->
+        <div v-for="item in order.items" :key="item.id" class="order-item">
+          <div class="product-info">
+            <img :src="item.thumb" class="product-image" />
+            <div class="product-details">
+              <div class="product-title">{{ item.title }}</div>
+              <div class="product-price">¥{{ item.price.toFixed(2) }}</div>
+            </div>
+            <div class="product-quantity">x{{ item.quantity }}</div>
+          </div>
+        </div>
+        
+        <div class="order-total">
+          实付款：¥ {{ calculateOrderTotal(order.items) }}
+        </div>
       </div>
     </div>
     
@@ -48,7 +57,7 @@ const orders = ref([]);
 // 模拟获取订单数据
 const getOrders = async () => {
   try {
-    const res = await axios.get('/orders');
+    const res = await axios.get('orders'); // 移除前导斜杠以使用baseURL
     if (res.data.code === 200) {
       orders.value = res.data.data;
       console.log("orders:", orders.value);
@@ -58,10 +67,10 @@ const getOrders = async () => {
   }
 };
 
-// 计算总价
-const calculateTotal = () => {
-  return orders.value.reduce((total, order) => {
-    return total + (order.price * order.quantity);
+// 计算单个订单总价
+const calculateOrderTotal = (items) => {
+  return items.reduce((total, item) => {
+    return total + (item.price * item.quantity);
   }, 0).toFixed(2);
 };
 
@@ -84,6 +93,21 @@ onMounted(() => {
 .orders-container {
   height: 100vh;
   background-color: #f7f8fa;
+  /* 覆盖底部导航栏 */
+  position: relative;
+  z-index: 1000;
+}
+
+/* 只在当前页面隐藏底部导航栏 */
+.orders-container::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background-color: #f7f8fa;
+  z-index: 999;
 }
 
 .orders-header {
@@ -92,20 +116,38 @@ onMounted(() => {
   z-index: 100;
 }
 
+.orders-list {
+  padding: 16px;
+  /* 添加底部空白区域，避免内容被遮挡 */
+  padding-bottom: 100px;
+}
+
 .order-card {
-  margin: 16px;
+  margin-bottom: 16px;
   background-color: #fff;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(100, 101, 102, 0.08);
 }
 
-.order-item {
+.order-header {
   padding: 16px;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #fafafa;
+  text-align: right;
 }
 
-.order-item:last-child {
+.order-time {
+  font-size: 12px;
+  color: #969799;
+}
+
+.order-item {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.order-item:last-of-type {
   border-bottom: none;
 }
 
@@ -115,11 +157,11 @@ onMounted(() => {
 }
 
 .product-image {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
   margin-right: 12px;
-  border-radius: 4px;
+  object-fit: cover;
 }
 
 .product-details {
@@ -127,33 +169,40 @@ onMounted(() => {
 }
 
 .product-title {
-  font-size: 16px;
-  margin-bottom: 8px;
+  font-size: 14px;
   color: #323233;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .product-price {
-  color: #ff6034;
   font-size: 16px;
+  color: #ee0a24;
   font-weight: 500;
 }
 
 .product-quantity {
-  color: #969799;
   font-size: 14px;
-  margin-left: 12px;
+  color: #969799;
 }
 
 .order-total {
-  text-align: right;
   padding: 16px;
-  font-weight: bold;
+  text-align: right;
   font-size: 16px;
+  font-weight: 500;
   color: #323233;
+  background-color: #fafafa;
 }
 
 .empty-orders {
   padding: 40px 20px;
+  /* 为空状态也添加底部空白区域 */
+  padding-bottom: 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
