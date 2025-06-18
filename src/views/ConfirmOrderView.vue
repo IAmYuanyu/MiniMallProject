@@ -9,7 +9,7 @@
     />
     
     <!-- 收货地址 -->
-    <div class="address-card" v-if="defaultAddress">
+    <div class="address-card" v-if="defaultAddress" @click="selectAddress">
       <div class="address-info">
         <div class="user-info">
           <span class="name">姓名：{{ defaultAddress.name }}</span>
@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showSuccessToast, showLoadingToast } from 'vant'
 import axios from 'axios'
@@ -80,6 +80,14 @@ const defaultAddress = ref(null)
 // 获取默认地址
 const getDefaultAddress = async () => {
   try {
+    // 先检查是否有选择的地址
+    const selectedAddressStr = localStorage.getItem('selectedAddress')
+    if (selectedAddressStr) {
+      defaultAddress.value = JSON.parse(selectedAddressStr)
+      localStorage.removeItem('selectedAddress') // 使用后清除
+      return
+    }
+    
     const res = await axios.get('/addresses')
     if (res.data.code === 200) {
       // 获取默认地址
@@ -90,6 +98,11 @@ const getDefaultAddress = async () => {
     console.error('获取地址失败', error)
     showToast('获取地址失败')
   }
+}
+
+// 选择地址
+const selectAddress = () => {
+  router.push('/address?mode=select')
 }
 
 // 获取订单商品（从购物车中选择的商品）
@@ -187,6 +200,11 @@ const onClickLeft = () => {
   router.back()
 }
 
+// 页面激活时重新获取地址（从地址选择页面返回时）
+onActivated(() => {
+  getDefaultAddress()
+})
+
 onMounted(() => {
   getDefaultAddress()
   getOrderItems()
@@ -208,6 +226,12 @@ onMounted(() => {
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 2px 12px rgba(100, 101, 102, 0.08);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.address-card:active {
+  background-color: #f5f5f5;
 }
 
 .address-info {
