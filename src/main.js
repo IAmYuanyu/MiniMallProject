@@ -15,8 +15,9 @@ axios.defaults.baseURL = '/api'
 axios.defaults.timeout = 5000
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
 app.use(vant)
 app.config.globalProperties.$axios = axios

@@ -70,10 +70,12 @@
 <script setup>
 import { ref, computed, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast, showSuccessToast, showLoadingToast } from 'vant'
+import { showToast, showLoadingToast } from 'vant'
+import { useOrdersStore } from '@/stores/orders'
 import axios from 'axios'
 
 const router = useRouter()
+const ordersStore = useOrdersStore()
 const orderItems = ref([])
 const defaultAddress = ref(null)
 
@@ -163,26 +165,15 @@ const submitOrder = async () => {
   })
   
   try {
-    // 提交订单
-    const res = await axios.post('/order/submit', {
+    // 使用Pinia store提交订单
+    const result = await ordersStore.submitOrder({
       addressId: defaultAddress.value.id,
-    //   items: orderItems.value.map(item => ({
-    //     id: item.id,
-    //     productId: item.productId,
-    //     quantity: item.quantity
-    //   }))
-      items: orderItems.value.map(item => item)
+      items: orderItems.value
     })
     
-    if (res.data.code === 200) {
-      loading.close()
-      showSuccessToast('下单成功')
-    //   localStorage.setItem('orders', localStorage.getItem('confirmOrderItems'))
-    //   console.log(JSON.parse(localStorage.getItem('confirmOrderItems')));
-    //   localStorage.setItem('orders', JSON.stringify(JSON.parse(localStorage.getItem('confirmOrderItems'))));
-      console.log(res);
-      
-      
+    loading.close()
+    
+    if (result.success) {
       // 清除临时保存的订单商品
       localStorage.removeItem('confirmOrderItems')
       // 跳转到订单页面
