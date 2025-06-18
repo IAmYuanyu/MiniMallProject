@@ -17,6 +17,7 @@
             label="用户名"
             placeholder="请输入用户名"
             :rules="usernameRules"
+            class="custom-field"
           />
           <van-field
             v-model="phone"
@@ -24,6 +25,7 @@
             label="手机号"
             placeholder="请输入手机号"
             :rules="phoneRules"
+            class="custom-field"
           />
           <van-field
             v-model="password"
@@ -32,6 +34,7 @@
             label="密码"
             placeholder="请输入密码"
             :rules="passwordRules"
+            class="custom-field"
           />
           <van-field
             v-model="confirmPassword"
@@ -40,6 +43,7 @@
             label="确认密码"
             placeholder="请再次输入密码"
             :rules="confirmPasswordRules"
+            class="custom-field"
           />
           <div class="gender-field">
             <span class="gender-label">性别</span>
@@ -156,6 +160,29 @@ const onSubmit = async (values) => {
     
     // 模拟注册请求
     Mock.mock('/api/user/register', 'post', () => {
+      // 获取已注册用户列表
+      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      
+      // 检查用户名是否已存在
+      const userExists = registeredUsers.some(user => user.username === values.username);
+      if (userExists) {
+        return {
+          code: 400,
+          message: '该用户名已被注册'
+        };
+      }
+      
+      // 添加新用户到列表
+      registeredUsers.push({
+        username: values.username,
+        password: values.password,
+        phone: values.phone,
+        gender: values.gender
+      });
+      
+      // 保存到localStorage
+      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+      
       return {
         code: 200,
         message: '注册成功'
@@ -196,5 +223,14 @@ const onSubmit = async (values) => {
   margin-right: 20px;
   min-width: 90px;
   font-size: 14px;
+}
+
+/* 添加自定义输入框样式 */
+.custom-field :deep(input) {
+  caret-color: transparent; /* 默认隐藏光标 */
+}
+
+.custom-field :deep(input:focus) {
+  caret-color: #1989fa; /* 获得焦点时显示光标，颜色与Vant主题色一致 */
 }
 </style>

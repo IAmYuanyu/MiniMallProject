@@ -63,7 +63,7 @@
             :rules="[{ required: true, message: '请填写手机号' }]"
           />
           <van-field
-            v-model="addressForm.province"
+            v-model="areaText"
             is-link
             readonly
             name="area"
@@ -89,6 +89,7 @@
     
     <van-popup v-model:show="showAreaPicker" position="bottom">
       <van-area
+        title="选择地区"
         :area-list="areaList"
         @confirm="onAreaConfirm"
         @cancel="showAreaPicker = false"
@@ -98,9 +99,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { showSuccessToast } from 'vant';
+import { showSuccessToast, showFailToast } from 'vant';
 import { areaList } from '@vant/area-data';
 import axios from 'axios';
 import Mock from 'mockjs';
@@ -121,6 +122,14 @@ const addressForm = reactive({
   county: '',
   addressDetail: '',
   isDefault: false
+});
+
+// 计算属性：地区文本
+const areaText = computed(() => {
+  if (addressForm.province && addressForm.city && addressForm.county) {
+    return `${addressForm.province} ${addressForm.city} ${addressForm.county}`;
+  }
+  return '';
 });
 
 // 模拟获取地址数据
@@ -193,6 +202,7 @@ const deleteAddress = (index) => {
 const saveAddress = () => {
   // 表单验证
   if (!addressForm.name || !addressForm.phone || !addressForm.province || !addressForm.addressDetail) {
+    showFailToast('请完善地址信息');
     return;
   }
   
@@ -230,10 +240,47 @@ const saveAddress = () => {
 
 // 地区选择确认
 const onAreaConfirm = (values) => {
-  addressForm.province = values[0].name;
-  addressForm.city = values[1].name;
-  addressForm.county = values[2].name;
-  showAreaPicker.value = false;
+  try {
+    console.log('地区选择值:', values); // 添加日志查看返回值结构
+    
+    if (values && Array.isArray(values)) {
+      // 在Vant 4中，values是一个包含选中项的数组
+      // 每个选中项是一个对象，包含code和name属性
+      const province = values[0]?.name;
+      const city = values[1]?.name;
+      const county = values[2]?.name;
+      
+      console.log('解析的地区值:', { province, city, county });
+      
+      // 更新表单数据
+      addressForm.province = province || '';
+      addressForm.city = city || '';
+      addressForm.county = county || '';
+      
+      if (province && city && county) {
+        showSuccessToast('地区选择完成');
+      } else {
+        // 构建缺失项提示
+        const missingParts = [];
+        if (!province) missingParts.push('省份');
+        if (!city) missingParts.push('城市');
+        if (!county) missingParts.push('区县');
+        
+        showFailToast(`请选择${missingParts.join('、')}`);
+        return;
+      }
+    } else {
+      showFailToast('地区选择数据格式错误');
+      return;
+    }
+  } catch (error) {
+    console.error('地区选择处理错误:', error);
+    showFailToast('地区选择处理出错');
+    return;
+  } finally {
+    // 无论成功失败都关闭选择器
+    showAreaPicker.value = false;
+  }
 };
 
 // 重置地址表单

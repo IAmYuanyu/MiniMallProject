@@ -18,3 +18,12 @@ a,
     background-color: hsla(160, 100%, 37%, 0.2);
   }
 }
+
+/* 全局控制光标显示 */
+* {
+  caret-color: transparent !important;
+}
+
+input:focus, textarea:focus {
+  caret-color: auto !important;
+}
