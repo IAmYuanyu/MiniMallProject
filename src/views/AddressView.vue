@@ -108,7 +108,7 @@
 
 <script setup>
 // 在 <script setup> 部分导入 nextTick
-import { ref, reactive, computed, nextTick } from 'vue';
+import { ref, reactive, computed, nextTick, onMounted } from 'vue';
 
 // 添加一个打开地区选择器的方法
 const openAreaPicker = () => {
@@ -148,12 +148,36 @@ const areaText = computed(() => {
   return '';
 });
 
+// 保存地址到本地存储
+const saveAddressesToStorage = () => {
+  localStorage.setItem('userAddresses', JSON.stringify(addresses.value));
+};
+
+// 从本地存储加载地址
+const loadAddressesFromStorage = () => {
+  const storedAddresses = localStorage.getItem('userAddresses');
+  if (storedAddresses) {
+    addresses.value = JSON.parse(storedAddresses);
+    return true;
+  }
+  return false;
+};
+
 // 模拟获取地址数据
 const getAddresses = async () => {
+  // 先尝试从本地存储加载
+  if (loadAddressesFromStorage()) {
+    console.log('从本地存储加载地址数据成功');
+    return;
+  }
+  
+  // 如果本地没有，则从API获取
   try {
     const res = await axios.get('/addresses');
     if (res.data.code === 200) {
       addresses.value = res.data.data;
+      // 将初始数据也保存到本地存储
+      saveAddressesToStorage();
     }
   } catch (error) {
     console.error('获取地址列表失败', error);
@@ -184,6 +208,8 @@ const editAddress = (index) => {
 // 删除地址
 const deleteAddress = (index) => {
   addresses.value.splice(index, 1);
+  // 删除后保存到本地存储
+  saveAddressesToStorage();
   showSuccessToast('删除成功');
 };
 
@@ -224,6 +250,8 @@ const saveAddress = () => {
     showSuccessToast('添加成功');
   }
   
+  // 保存到本地存储
+  saveAddressesToStorage();
   showAddressForm.value = false;
 };
 
@@ -334,7 +362,9 @@ const resetAddressForm = () => {
 };
 
 // 页面加载时获取地址列表
-getAddresses();
+onMounted(() => {
+  getAddresses();
+});
 </script>
 
 <style scoped>
