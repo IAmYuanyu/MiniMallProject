@@ -84,6 +84,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { showToast, showSuccessToast, showLoadingToast } from 'vant'
 import axios from 'axios'
+import { useRouter } from 'vue-router'  // 添加这一行导入useRouter
+
+// 初始化router对象
+const router = useRouter()  // 添加这一行初始化router
 
 // 购物车商品列表
 const cartItems = ref([])
@@ -174,11 +178,20 @@ const checkout = async () => {
     return
   }
   
+  // 获取选中的商品
+  const selectedItems = cartItems.value.filter(item => item.selected)
+  
+  // 将选中的商品保存到localStorage，供确认订单页面使用
+  localStorage.setItem('confirmOrderItems', JSON.stringify(selectedItems))
+  
+  // 跳转到确认订单页面
+  router.push('/confirmOrder')
+
   const loading = showLoadingToast({
     message: '结算中...',
     forbidClick: true,
   })
-  
+
   try {
     const res = await axios.post('/cart/checkout')
     if (res.data.code === 200) {

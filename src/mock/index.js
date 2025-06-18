@@ -38,6 +38,8 @@ const products = Mock.mock({
 // 初始化购物车数据
 let cartItems = []
 
+// ==================== 商品相关接口 ====================
+
 // 模拟搜索接口
 Mock.mock(/\/api\/search/, 'get', (options) => {
   const url = new URL(options.url, 'http://example.com')
@@ -102,6 +104,8 @@ Mock.mock(/\/api\/products\/\d+/, 'get', (options) => {
     }
   }
 })
+
+// ==================== 购物车相关接口 ====================
 
 // 模拟添加到购物车接口
 Mock.mock('/api/cart/add', 'post', (options) => {
@@ -240,5 +244,262 @@ Mock.mock('/api/cart/checkout', 'post', (options) => {
     message: '结算成功'
   }
 })
+
+// ==================== 地址相关接口 ====================
+
+// 地址数据
+Mock.mock('/api/addresses', 'get', {
+  code: 200,
+  data: [
+    {
+      id: 1,
+      name: '张三',
+      phone: '13800138000',
+      province: '广东省',
+      city: '深圳市',
+      county: '南山区',
+      addressDetail: '科技园南路XX号XX大厦',
+      isDefault: true
+    },
+    {
+      id: 2,
+      name: '李四',
+      phone: '13900139000',
+      province: '北京市',
+      city: '北京市',
+      county: '朝阳区',
+      addressDetail: 'XX路XX号',
+      isDefault: false
+    }
+  ]
+})
+
+// ==================== 用户相关接口 ====================
+
+// 模拟检查登录状态API
+Mock.mock('/api/user/check-login', 'get', () => {
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  return {
+    code: 200,
+    message: '获取成功',
+    data: {
+      isLoggedIn
+    }
+  };
+});
+
+// 模拟登录验证API
+Mock.mock('/api/user/check-login', 'post', (options) => {
+  const { username, password } = JSON.parse(options.body);
+  
+  // 从localStorage获取已注册用户列表
+  const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+  
+  // 检查用户是否存在
+  const userExists = registeredUsers.some(user => 
+    user.username === username && user.password === password
+  );
+  
+  return {
+    code: userExists ? 200 : 400,
+    message: userExists ? '登录成功' : '用户名或密码错误，或该用户未注册'
+  };
+});
+
+// 模拟获取用户信息API
+Mock.mock('/api/user/info', 'get', () => {
+  const userInfoStr = localStorage.getItem('userInfo');
+  const userInfo = userInfoStr ? JSON.parse(userInfoStr) : {};
+  return {
+    code: 200,
+    message: '获取成功',
+    data: userInfo
+  };
+});
+
+// 模拟检查昵称API
+Mock.mock('/api/user/check-nickname', 'post', (options) => {
+  const { nickname } = JSON.parse(options.body);
+  // 模拟昵称检查逻辑，这里简单判断昵称长度
+  if (nickname.length < 1) {
+    return {
+      code: 400,
+      message: '昵称长度不能少于1个字符'
+    };
+  }
+  return {
+    code: 200,
+    message: '昵称可用'
+  };
+});
+
+// 模拟检查用户名是否存在
+Mock.mock('/api/user/check-username', 'post', (options) => {
+  const { username } = JSON.parse(options.body);
+  // 模拟已存在的用户名
+  const existingUsernames = ['admin', 'test', 'user123'];
+  return {
+    code: existingUsernames.includes(username) ? 400 : 200,
+    message: existingUsernames.includes(username) ? '用户名已存在' : '用户名可用'
+  };
+});
+
+// 模拟更新用户信息API
+Mock.mock('/api/user/update', 'post', (options) => {
+  const body = JSON.parse(options.body);
+  const userInfoStr = localStorage.getItem('userInfo');
+  let userInfo = userInfoStr ? JSON.parse(userInfoStr) : {};
+  
+  // 更新用户信息
+  userInfo = { ...userInfo, ...body };
+  localStorage.setItem('userInfo', JSON.stringify(userInfo));
+  
+  return {
+    code: 200,
+    message: '更新成功',
+    data: userInfo
+  };
+});
+
+// 模拟上传头像API
+Mock.mock('/api/user/upload-avatar', 'post', () => {
+  // 模拟返回一个随机头像URL
+  const avatarUrl = `https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg?t=${Date.now()}`;
+  
+  // 更新本地存储中的头像
+  const userInfoStr = localStorage.getItem('userInfo');
+  let userInfo = userInfoStr ? JSON.parse(userInfoStr) : {};
+  userInfo.avatar = avatarUrl;
+  localStorage.setItem('userInfo', JSON.stringify(userInfo));
+  
+  return {
+    code: 200,
+    message: '上传成功',
+    data: {
+      url: avatarUrl
+    }
+  };
+});
+
+// 模拟注册请求
+Mock.mock('/api/user/register', 'post', (options) => {
+  const values = JSON.parse(options.body);
+  // 获取已注册用户列表
+  const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+  
+  // 检查用户名是否已存在
+  const userExists = registeredUsers.some(user => user.username === values.username);
+  if (userExists) {
+    return {
+      code: 400,
+      message: '该用户名已被注册'
+    };
+  }
+  
+  // 添加新用户到列表
+  registeredUsers.push({
+    username: values.username,
+    password: values.password,
+    phone: values.phone,
+    gender: values.gender
+  });
+  
+  // 保存到localStorage
+  localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+  
+  return {
+    code: 200,
+    message: '注册成功'
+  };
+});
+
+// ==================== 订单相关接口 ====================
+
+// 模拟获取订单数据
+Mock.mock('/api/orders', 'get', () => {
+  // 从localStorage中获取订单数据
+  const ordersList = JSON.parse(localStorage.getItem('orders')) || [];
+  
+  return {
+    code: 200,
+    data: ordersList.length > 0 ? ordersList : [
+      // 如果localStorage中没有订单数据，则返回默认的示例订单
+      {
+        id: Mock.Random.guid(),
+        title: '羊排 1000g',
+        thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/ipad.jpeg',
+        price: 120.00,
+        quantity: 2,
+        status: 1,
+        createTime: Mock.Random.datetime()
+      },
+      {
+        id: Mock.Random.guid(),
+        title: '猪瘦肉',
+        thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg',
+        price: 80.00,
+        quantity: 4,
+        status: 2,
+        createTime: Mock.Random.datetime()
+      },
+      {
+        id: Mock.Random.guid(),
+        title: '龙虾',
+        thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-2.jpeg',
+        price: 160.00,
+        quantity: 3,
+        status: 3,
+        createTime: Mock.Random.datetime()
+      }
+    ]
+  };
+});
+
+// 模拟提交订单API
+Mock.mock('/api/order/submit', 'post', (options) => {
+  const { addressId, items } = JSON.parse(options.body);
+  
+  // 获取购物车中的商品详情
+  const orderItems = items.map(item => {
+    const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+    if (!cartItem) return null;
+    
+    return {
+      id: Mock.Random.guid(),
+      title: cartItem.product.title,
+      thumb: cartItem.product.image,
+      price: cartItem.product.price,
+      quantity: cartItem.quantity,
+      status: 1, // 1: 待发货
+      createTime: Mock.Random.datetime()
+    };
+  }).filter(Boolean); // 过滤掉null值
+  
+  // 获取现有订单列表或创建新的空数组
+  let ordersList = JSON.parse(localStorage.getItem('orders')) || [];
+  
+  // 将新订单添加到订单列表
+  ordersList = [...orderItems, ...ordersList];
+  
+  // 保存更新后的订单列表
+  localStorage.setItem('orders', JSON.stringify(ordersList));
+  
+  // 从购物车中移除已下单的商品
+  items.forEach(item => {
+    const index = cartItems.findIndex(cartItem => cartItem.id === item.id);
+    if (index !== -1) {
+      cartItems.splice(index, 1);
+    }
+  });
+  
+  return {
+    code: 200,
+    data: {
+      orderNo: Mock.Random.string('number', 16),
+      orderItems
+    },
+    message: '下单成功'
+  };
+});
 
 export default Mock
