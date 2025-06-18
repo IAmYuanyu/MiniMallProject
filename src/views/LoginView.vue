@@ -51,23 +51,7 @@ const router = useRouter();
 const username = ref('');
 const password = ref('');
 
-// 模拟已注册用户数据库
-Mock.mock('/api/user/check-login', 'post', (options) => {
-  const { username, password } = JSON.parse(options.body);
-  
-  // 从localStorage获取已注册用户列表
-  const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-  
-  // 检查用户是否存在
-  const userExists = registeredUsers.some(user => 
-    user.username === username && user.password === password
-  );
-  
-  return {
-    code: userExists ? 200 : 400,
-    message: userExists ? '登录成功' : '用户名或密码错误，或该用户未注册'
-  };
-});
+
 
 const onClickLeft = () => {
   router.back();
@@ -76,7 +60,7 @@ const onClickLeft = () => {
 const onSubmit = async (values) => {
   try {
     // 调用登录验证接口
-    const res = await axios.post('/api/user/check-login', {
+    const res = await axios.post('/user/check-login', {
       username: values.username,
       password: values.password
     });

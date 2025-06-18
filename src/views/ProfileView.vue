@@ -134,7 +134,7 @@ const uploader = ref(null);
 // 获取用户登录状态
 const checkLoginStatus = async () => {
   try {
-    const res = await axios.get('/api/user/check-login');
+    const res = await axios.get('/user/check-login');
     if (res.data.code === 200) {
       isLoggedIn.value = res.data.data.isLoggedIn;
       // 如果已登录，获取用户信息
@@ -151,7 +151,7 @@ const checkLoginStatus = async () => {
 const getUserInfo = async () => {
   try {
     // 从API获取用户信息
-    const res = await axios.get('/api/user/info');
+    const res = await axios.get('/user/info');
     if (res.data.code === 200) {
       Object.assign(userInfo, res.data.data);
     }
@@ -219,7 +219,7 @@ const saveNickname = async () => {
 
   try {
     // 检查昵称是否已存在
-    const checkRes = await axios.post('/api/user/check-nickname', {
+    const checkRes = await axios.post('/user/check-nickname', {
       nickname: editingNickname.value
     });
 
@@ -229,7 +229,7 @@ const saveNickname = async () => {
     }
 
     // 更新昵称
-    const updateRes = await axios.post('/api/user/update', {
+    const updateRes = await axios.post('/user/update', {
       nickname: editingNickname.value
     });
 
@@ -254,7 +254,7 @@ const editSignature = () => {
 // 保存个性签名
 const saveSignature = async () => {
   try {
-    const res = await axios.post('/api/user/update', {
+    const res = await axios.post('/user/update', {
       signature: editingSignature.value
     });
 
@@ -304,7 +304,7 @@ const afterRead = async (file) => {
     // const res = await axios.post('/api/user/upload-avatar', formData);
 
     // 模拟上传成功
-    const res = await axios.post('/api/user/upload-avatar');
+    const res = await axios.post('/user/upload-avatar');
     if (res.data.code === 200) {
       userInfo.avatar = res.data.data.url;
       showSuccessToast('头像上传成功');
@@ -340,81 +340,7 @@ onMounted(() => {
 });
 // 在<script setup>部分添加以下Mock配置
 
-// 模拟检查登录状态API
-Mock.mock('/api/user/check-login', 'get', () => {
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-  return {
-    code: 200,
-    message: '获取成功',
-    data: {
-      isLoggedIn
-    }
-  };
-});
 
-// 模拟获取用户信息API
-Mock.mock('/api/user/info', 'get', () => {
-  const userInfoStr = localStorage.getItem('userInfo');
-  const userInfo = userInfoStr ? JSON.parse(userInfoStr) : {};
-  return {
-    code: 200,
-    message: '获取成功',
-    data: userInfo
-  };
-});
-
-// 模拟检查昵称API
-Mock.mock('/api/user/check-nickname', 'post', (options) => {
-  const { nickname } = JSON.parse(options.body);
-  // 模拟昵称检查逻辑，这里简单判断昵称长度
-  if (nickname.length < 1) {
-    return {
-      code: 400,
-      message: '昵称长度不能少于1个字符'
-    };
-  }
-  return {
-    code: 200,
-    message: '昵称可用'
-  };
-});
-
-// 模拟更新用户信息API
-Mock.mock('/api/user/update', 'post', (options) => {
-  const body = JSON.parse(options.body);
-  const userInfoStr = localStorage.getItem('userInfo');
-  let userInfo = userInfoStr ? JSON.parse(userInfoStr) : {};
-  
-  // 更新用户信息
-  userInfo = { ...userInfo, ...body };
-  localStorage.setItem('userInfo', JSON.stringify(userInfo));
-  
-  return {
-    code: 200,
-    message: '更新成功',
-    data: userInfo
-  };
-});
-
-// 模拟上传头像API
-Mock.mock('/api/user/upload-avatar', 'post', () => {
-  // 模拟返回一个随机头像URL
-  const avatarUrl = `https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg?t=${Date.now()}`;
-  
-  // 更新本地存储中的头像
-  const userInfoStr = localStorage.getItem('userInfo');
-  let userInfo = userInfoStr ? JSON.parse(userInfoStr) : {};
-  userInfo.avatar = avatarUrl;
-  localStorage.setItem('userInfo', JSON.stringify(userInfo));
-  
-  return {
-    code: 200,
-    message: '上传成功',
-    data: {
-      url: avatarUrl
-    }
-  };
-});
 </script>
 
 <style scoped>

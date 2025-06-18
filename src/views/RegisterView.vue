@@ -104,16 +104,7 @@ const confirmPasswordRules = [
   { validator: validateConfirmPassword, message: '两次密码不一致' }
 ];
 
-// 模拟检查用户名是否存在
-Mock.mock('/api/user/check-username', 'post', (options) => {
-  const { username } = JSON.parse(options.body);
-  // 模拟已存在的用户名
-  const existingUsernames = ['admin', 'test', 'user123'];
-  return {
-    code: existingUsernames.includes(username) ? 400 : 200,
-    message: existingUsernames.includes(username) ? '用户名已存在' : '用户名可用'
-  };
-});
+
 
 // 验证用户名长度
 function validateUsername(val) {
@@ -125,7 +116,7 @@ async function checkUsernameExist(val) {
   if (val.length < 1) return true; // 长度不够时不检查
   
   try {
-    const res = await axios.post('/api/user/check-username', { username: val });
+    const res = await axios.post('/user/check-username', { username: val });
     return res.data.code === 200;
   } catch (error) {
     console.error('检查用户名失败', error);
@@ -159,7 +150,7 @@ const onSubmit = async (values) => {
     }
     
     // 模拟注册请求
-    Mock.mock('/api/user/register', 'post', () => {
+    Mock.mock('/user/register', 'post', () => {
       // 获取已注册用户列表
       const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
       
@@ -189,7 +180,7 @@ const onSubmit = async (values) => {
       };
     });
     
-    const res = await axios.post('/api/user/register', values);
+    const res = await axios.post('/user/register', values);
     if (res.data.code === 200) {
       showSuccessToast('注册成功，请登录');
       router.push('/login');

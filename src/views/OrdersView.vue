@@ -48,41 +48,7 @@ const orders = ref([]);
 // 模拟获取订单数据
 const getOrders = async () => {
   try {
-    // 模拟API请求
-    Mock.mock('/api/orders', 'get', {
-      code: 200,
-      data: [
-        {
-          id: Mock.Random.guid(),
-          title: '羊排 1000g',
-          thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/ipad.jpeg',
-          price: 120.00,
-          quantity: 2,
-          status: 1,
-          createTime: Mock.Random.datetime()
-        },
-        {
-          id: Mock.Random.guid(),
-          title: '猪瘦肉',
-          thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg',
-          price: 80.00,
-          quantity: 4,
-          status: 2,
-          createTime: Mock.Random.datetime()
-        },
-        {
-          id: Mock.Random.guid(),
-          title: '龙虾',
-          thumb: 'https://fastly.jsdelivr.net/npm/@vant/assets/apple-2.jpeg',
-          price: 160.00,
-          quantity: 3,
-          status: 3,
-          createTime: Mock.Random.datetime()
-        }
-      ]
-    });
-
-    const res = await axios.get('/api/orders');
+    const res = await axios.get('/orders');
     if (res.data.code === 200) {
       orders.value = res.data.data;
     }

@@ -9,7 +9,12 @@
     />
     
     <div v-if="addresses.length > 0" class="address-list">
-      <van-swipe-cell v-for="(address, index) in addresses" :key="index">
+      <van-swipe-cell
+        v-for="(address, index) in addresses"
+        :key="index"
+        :right-width="65"
+        :stop-propagation="true"
+      >
         <van-cell-group inset>
           <van-cell :border="false">
             <template #title>
@@ -28,7 +33,9 @@
           </van-cell>
         </van-cell-group>
         <template #right>
-          <van-button square type="danger" text="删除" @click="deleteAddress(index)" />
+          <div class="delete-button" @click="deleteAddress(index)">
+            <span>删除</span>
+          </div>
         </template>
       </van-swipe-cell>
     </div>
@@ -69,7 +76,7 @@
             name="area"
             label="地区"
             placeholder="请选择省市区"
-            @click="showAreaPicker = true"
+            @click="openAreaPicker"
           />
           <van-field
             v-model="addressForm.addressDetail"
@@ -91,6 +98,7 @@
       <van-area
         title="选择地区"
         :area-list="areaList"
+        value-key="name"
         @confirm="onAreaConfirm"
         @cancel="showAreaPicker = false"
       />
@@ -99,7 +107,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
+// 在 <script setup> 部分导入 nextTick
+import { ref, reactive, computed, nextTick } from 'vue';
+
+// 添加一个打开地区选择器的方法
+const openAreaPicker = () => {
+  nextTick(() => {
+    showAreaPicker.value = true;
+  });
+};
 import { useRouter } from 'vue-router';
 import { showSuccessToast, showFailToast } from 'vant';
 import { areaList } from '@vant/area-data';
@@ -135,34 +151,7 @@ const areaText = computed(() => {
 // 模拟获取地址数据
 const getAddresses = async () => {
   try {
-    // 模拟API请求
-    Mock.mock('/api/addresses', 'get', {
-      code: 200,
-      data: [
-        {
-          id: 1,
-          name: '张三',
-          phone: '13800138000',
-          province: '广东省',
-          city: '深圳市',
-          county: '南山区',
-          addressDetail: '科技园南路XX号XX大厦',
-          isDefault: true
-        },
-        {
-          id: 2,
-          name: '李四',
-          phone: '13900139000',
-          province: '北京市',
-          city: '北京市',
-          county: '朝阳区',
-          addressDetail: 'XX路XX号',
-          isDefault: false
-        }
-      ]
-    });
-
-    const res = await axios.get('/api/addresses');
+    const res = await axios.get('/addresses');
     if (res.data.code === 200) {
       addresses.value = res.data.data;
     }
@@ -241,36 +230,86 @@ const saveAddress = () => {
 // 地区选择确认
 const onAreaConfirm = (values) => {
   try {
-    console.log('地区选择值:', values); // 添加日志查看返回值结构
+    // 添加更详细的调试信息
+    console.log('地区选择值:', values);
+    console.log(values.selectedOptions[0].text);
+    console.log(values.selectedOptions[1].text);
+    console.log(values.selectedOptions[2].text);
     
-    if (values && Array.isArray(values)) {
-      // 在Vant 4中，values是一个包含选中项的数组
-      // 每个选中项是一个对象，包含code和name属性
-      const province = values[0]?.name;
-      const city = values[1]?.name;
-      const county = values[2]?.name;
-      
-      console.log('解析的地区值:', { province, city, county });
-      
-      // 更新表单数据
-      addressForm.province = province || '';
-      addressForm.city = city || '';
-      addressForm.county = county || '';
-      
-      if (province && city && county) {
-        showSuccessToast('地区选择完成');
-      } else {
-        // 构建缺失项提示
-        const missingParts = [];
-        if (!province) missingParts.push('省份');
-        if (!city) missingParts.push('城市');
-        if (!county) missingParts.push('区县');
+    console.log('地区选择值类型:', typeof values);
+    console.log('是否为数组:', Array.isArray(values));
+    if (Array.isArray(values)) {
+      console.log('数组长度:', values.length);
+      values.forEach((item, index) => {
+        console.log(`第${index+1}项:`, item, '类型:', typeof item);
+      });
+    }
+    
+    // 处理空值情况
+    if (!values) {
+      console.error('地区选择值为空');
+      showFailToast('请选择地区');
+      return;
+    }
+    
+    // 确保values是数组
+    if (!Array.isArray(values)) {
+      // 尝试处理可能的非数组情况
+      if (typeof values === 'object') {
+        // 如果是单个对象，尝试提取省市区信息
+        const province = values.selectedOptions[0].text || values.province || '';
+        const city = values.selectedOptions[1].text || values.city || '';
+        const county = values.selectedOptions[2].text || values.county || '';
         
-        showFailToast(`请选择${missingParts.join('、')}`);
+        addressForm.province = province;
+        addressForm.city = city;
+        addressForm.county = county;
+        
+        if (province || city || county) {
+          showSuccessToast('地区选择完成');
+          showAreaPicker.value = false;
+          return;
+        } else {
+          showFailToast('地区信息不完整');
+          return;
+        }
+      } else {
+        console.error('地区选择数据格式错误:', values);
+        showFailToast('地区选择数据格式错误');
         return;
       }
+    }
+    
+    // 处理数组情况
+    let province = '', city = '', county = '';
+    
+    // 适配不同的数据结构
+    if (values.length > 0) {
+      if (values[0] && typeof values[0] === 'object') {
+        // 尝试所有可能的属性名
+        province = values[0].name || values[0].text || values[0].label || values[0].value || '';
+        city = values[1]?.name || values[1]?.text || values[1]?.label || values[1]?.value || '';
+        county = values[2]?.name || values[2]?.text || values[2]?.label || values[2]?.value || '';
+      } else if (typeof values[0] === 'string') {
+        // 如果是字符串数组，直接使用
+        province = values[0] || '';
+        city = values[1] || '';
+        county = values[2] || '';
+      }
+    }
+    
+    console.log('解析的地区值:', { province, city, county });
+    
+    // 更新表单数据
+    addressForm.province = province;
+    addressForm.city = city;
+    addressForm.county = county;
+    
+    // 只要有一个值存在，就认为选择了地区
+    if (province || city || county) {
+      showSuccessToast('地区选择完成');
     } else {
-      showFailToast('地区选择数据格式错误');
+      showFailToast('请选择地区');
       return;
     }
   } catch (error) {
@@ -347,5 +386,16 @@ getAddresses();
 
 .address-form {
   padding: 20px 0;
+}
+
+.delete-button {
+  height: 100%;
+  width: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ee0a24;
+  color: white;
+  font-size: 14px;
 }
 </style>
