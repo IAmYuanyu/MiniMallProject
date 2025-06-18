@@ -451,18 +451,21 @@ Mock.mock('/api/orders', 'get', () => {
         status: 3,
         createTime: Mock.Random.datetime()
       }
-    ]
+    ],
   };
 });
 
 // 模拟提交订单API
 Mock.mock('/api/order/submit', 'post', (options) => {
   const { addressId, items } = JSON.parse(options.body);
+  console.log("items", items);
+  
   
   // 获取购物车中的商品详情
   const orderItems = items.map(item => {
-    const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
-    if (!cartItem) return null;
+    // const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+    // if (!cartItem) return null;
+    const cartItem = item
     
     return {
       id: Mock.Random.guid(),
@@ -474,6 +477,9 @@ Mock.mock('/api/order/submit', 'post', (options) => {
       createTime: Mock.Random.datetime()
     };
   }).filter(Boolean); // 过滤掉null值
+  console.log("orderItems", orderItems);
+
+  
   
   // 获取现有订单列表或创建新的空数组
   let ordersList = JSON.parse(localStorage.getItem('orders')) || [];

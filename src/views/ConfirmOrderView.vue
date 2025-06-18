@@ -153,11 +153,12 @@ const submitOrder = async () => {
     // 提交订单
     const res = await axios.post('/order/submit', {
       addressId: defaultAddress.value.id,
-      items: orderItems.value.map(item => ({
-        id: item.id,
-        productId: item.productId,
-        quantity: item.quantity
-      }))
+    //   items: orderItems.value.map(item => ({
+    //     id: item.id,
+    //     productId: item.productId,
+    //     quantity: item.quantity
+    //   }))
+      items: orderItems.value.map(item => item)
     })
     
     if (res.data.code === 200) {

@@ -52,7 +52,6 @@ const getOrders = async () => {
     if (res.data.code === 200) {
       orders.value = res.data.data;
       console.log("orders:", orders.value);
-      
     }
   } catch (error) {
     console.error('获取订单列表失败', error);
