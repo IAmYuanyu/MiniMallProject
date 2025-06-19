@@ -45,48 +45,31 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { showSuccessToast } from 'vant';
-import axios from 'axios';
-import Mock from 'mockjs';
+import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useOrdersStore } from '@/stores/orders'
 
-const router = useRouter();
-const orders = ref([]);
+const router = useRouter()
+const ordersStore = useOrdersStore()
 
-// 模拟获取订单数据
-const getOrders = async () => {
-  try {
-    const res = await axios.get('orders'); // 移除前导斜杠以使用baseURL
-    if (res.data.code === 200) {
-      orders.value = res.data.data;
-      console.log("orders:", orders.value);
-    }
-  } catch (error) {
-    console.error('获取订单列表失败', error);
-  }
-};
-
-// 计算单个订单总价
-const calculateOrderTotal = (items) => {
-  return items.reduce((total, item) => {
-    return total + (item.price * item.quantity);
-  }, 0).toFixed(2);
-};
+// 使用store中的状态和方法
+const orders = computed(() => ordersStore.orders)
+const loading = computed(() => ordersStore.loading)
+const { fetchOrders, calculateOrderTotal } = ordersStore
 
 // 返回上一页
 const onClickLeft = () => {
-  router.back();
-};
+  router.back()
+}
 
 // 去购物
 const goShopping = () => {
-  router.push('/home');
-};
+  router.push('/home')
+}
 
 onMounted(() => {
-  getOrders();
-});
+  fetchOrders()
+})
 </script>
 
 <style scoped>

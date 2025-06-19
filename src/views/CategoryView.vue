@@ -19,7 +19,7 @@
       <div class="category-content">
         <div class="category-header" v-if="currentCategory">
           <div class="category-icon">
-            <img :src="currentCategory.icon" alt="分类图标" v-if="currentCategory.icon" />
+            <img :src="currentCategory.icon" :alt="currentCategory.name" />
           </div>
           <div class="category-name">{{ currentCategory.name }}</div>
         </div>
@@ -61,10 +61,23 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { showToast } from 'vant'
 import axios from 'axios'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+
+// 导入图标
+import 餐饮美食Icon from '@/assets/icons/餐饮美食.svg'
+import 乳品烘焙Icon from '@/assets/icons/乳品烘焙.svg'
+import 美妆百货Icon from '@/assets/icons/美妆百货.svg'
+import 酒水饮料Icon from '@/assets/icons/酒水饮料.svg'
+import 粮油调味Icon from '@/assets/icons/粮油调味.svg'
+import 冰品面点Icon from '@/assets/icons/冰品面点.svg'
+import 海鲜水产Icon from '@/assets/icons/海鲜水产.svg'
+import 肉禽蛋品Icon from '@/assets/icons/肉禽蛋品.svg'
+import 新鲜蔬菜Icon from '@/assets/icons/新鲜蔬菜.svg'
+import 时令水果Icon from '@/assets/icons/时令水果.svg'
 
 // 获取路由实例和参数
 const route = useRoute()
+const router = useRouter()
 
 // 状态变量
 const categories = ref([])
@@ -75,39 +88,48 @@ const finished = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
+// 检查登录状态
+const checkLoginStatus = () => {
+  const userInfo = localStorage.getItem('userInfo')
+  return userInfo && userInfo !== 'null'
+}
+
 // 计算当前选中的分类
 const currentCategory = computed(() => {
   if (categories.value.length === 0) return null
   return categories.value[activeCategory.value]
 })
 
-// 获取所有分类
-const fetchCategories = async () => {
-  try {
-    const response = await axios.get('/categories')
-    if (response.data.code === 200) {
-      categories.value = response.data.data
-      
-      // 检查URL参数中是否有categoryId
-      const categoryId = Number(route.query.categoryId)
-      if (categoryId) {
-        // 找到对应分类的索引
-        const index = categories.value.findIndex(c => c.id === categoryId)
-        if (index !== -1) {
-          activeCategory.value = index
-          loadCategoryProducts(categoryId)
-          return
-        }
-      }
-      
-      // 如果没有参数或找不到对应分类，加载第一个分类
-      if (categories.value.length > 0) {
-        loadCategoryProducts(categories.value[0].id)
-      }
+// 直接定义分类数据，使用导入的图标
+const initCategories = () => {
+  categories.value = [
+    { id: 1, name: '餐饮美食', icon: 餐饮美食Icon },
+    { id: 2, name: '乳品烘焙', icon: 乳品烘焙Icon },
+    { id: 3, name: '美妆百货', icon: 美妆百货Icon },
+    { id: 4, name: '酒水饮料', icon: 酒水饮料Icon },
+    { id: 5, name: '粮油调味', icon: 粮油调味Icon },
+    { id: 6, name: '冰品面点', icon: 冰品面点Icon },
+    { id: 7, name: '海鲜水产', icon: 海鲜水产Icon },
+    { id: 8, name: '肉禽蛋品', icon: 肉禽蛋品Icon },
+    { id: 9, name: '新鲜蔬菜', icon: 新鲜蔬菜Icon },
+    { id: 10, name: '时令水果', icon: 时令水果Icon }
+  ]
+  
+  // 检查URL参数中是否有categoryId
+  const categoryId = Number(route.query.categoryId)
+  if (categoryId) {
+    // 找到对应分类的索引
+    const index = categories.value.findIndex(c => c.id === categoryId)
+    if (index !== -1) {
+      activeCategory.value = index
+      loadCategoryProducts(categoryId)
+      return
     }
-  } catch (error) {
-    console.error('获取分类失败:', error)
-    showToast('获取分类失败')
+  }
+  
+  // 如果没有参数或找不到对应分类，加载第一个分类
+  if (categories.value.length > 0) {
+    loadCategoryProducts(categories.value[0].id)
   }
 }
 
@@ -173,6 +195,14 @@ const onLoad = () => {
 
 // 添加到购物车
 const addToCart = async (product) => {
+  // 检查登录状态
+  if (!checkLoginStatus()) {
+    showToast('请先登录')
+    // 跳转到个人中心页面
+    router.push('/profile')
+    return
+  }
+  
   try {
     const response = await axios.post('/cart/add', {
       productId: product.id,
@@ -200,9 +230,9 @@ watch(() => route.query.categoryId, (newCategoryId) => {
   }
 })
 
-// 页面加载时获取分类数据
+// 页面加载时初始化分类数据
 onMounted(() => {
-  fetchCategories()
+  initCategories()
 })
 </script>
 

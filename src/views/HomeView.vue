@@ -2,7 +2,19 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { showToast } from 'vant'
-import { useRouter } from 'vue-router' // 导入路由
+import { useRouter } from 'vue-router'
+
+// 导入图标
+import 餐饮美食Icon from '@/assets/icons/餐饮美食.svg'
+import 乳品烘焙Icon from '@/assets/icons/乳品烘焙.svg'
+import 美妆百货Icon from '@/assets/icons/美妆百货.svg'
+import 酒水饮料Icon from '@/assets/icons/酒水饮料.svg'
+import 粮油调味Icon from '@/assets/icons/粮油调味.svg'
+import 冰品面点Icon from '@/assets/icons/冰品面点.svg'
+import 海鲜水产Icon from '@/assets/icons/海鲜水产.svg'
+import 肉禽蛋品Icon from '@/assets/icons/肉禽蛋品.svg'
+import 新鲜蔬菜Icon from '@/assets/icons/新鲜蔬菜.svg'
+import 时令水果Icon from '@/assets/icons/时令水果.svg'
 
 // 获取路由实例
 const router = useRouter()
@@ -17,6 +29,12 @@ const finished = ref(false)
 const activeTab = ref(0)
 const tabs = ref(['全部', '菜谱', '早餐', '休闲', '人气'])
 
+// 检查登录状态
+const checkLoginStatus = () => {
+  const userInfo = localStorage.getItem('userInfo')
+  return userInfo && userInfo !== 'null'
+}
+
 // 获取轮播图数据
 const getBanners = async () => {
   try {
@@ -29,16 +47,20 @@ const getBanners = async () => {
   }
 }
 
-// 获取分类数据
-const getCategories = async () => {
-  try {
-    const res = await axios.get('/categories')
-    if (res.data.code === 200) {
-      categories.value = res.data.data
-    }
-  } catch (error) {
-    console.error('获取分类失败', error)
-  }
+// 直接定义分类数据，使用导入的图标
+const getCategories = () => {
+  categories.value = [
+    { id: 1, name: '餐饮美食', icon: 餐饮美食Icon },
+    { id: 2, name: '乳品烘焙', icon: 乳品烘焙Icon },
+    { id: 3, name: '美妆百货', icon: 美妆百货Icon },
+    { id: 4, name: '酒水饮料', icon: 酒水饮料Icon },
+    { id: 5, name: '粮油调味', icon: 粮油调味Icon },
+    { id: 6, name: '冰品面点', icon: 冰品面点Icon },
+    { id: 7, name: '海鲜水产', icon: 海鲜水产Icon },
+    { id: 8, name: '肉禽蛋品', icon: 肉禽蛋品Icon },
+    { id: 9, name: '新鲜蔬菜', icon: 新鲜蔬菜Icon },
+    { id: 10, name: '时令水果', icon: 时令水果Icon }
+  ]
 }
 
 // 获取商品数据
@@ -75,6 +97,14 @@ const onSearch = async () => {
 
 // 添加到购物车
 const addToCart = async (product) => {
+  // 检查登录状态
+  if (!checkLoginStatus()) {
+    showToast('请先登录')
+    // 跳转到个人中心页面
+    router.push('/profile')
+    return
+  }
+  
   try {
     const res = await axios.post('/cart/add', {
       productId: product.id,
@@ -140,24 +170,19 @@ onMounted(() => {
 
     <!-- 商品分类 -->
     <div class="category-container">
-      <van-grid :column-num="5" :border="false">
-        <van-grid-item 
-          v-for="category in categories.slice(0, 5)" 
+      <div class="category-grid">
+        <div 
+          v-for="category in categories" 
           :key="category.id" 
-          :icon="category.icon" 
-          :text="category.name"
-          @click="goToCategory(category)" 
-        />
-      </van-grid>
-      <van-grid :column-num="5" :border="false">
-        <van-grid-item 
-          v-for="category in categories.slice(5, 10)" 
-          :key="category.id" 
-          :icon="category.icon" 
-          :text="category.name"
-          @click="goToCategory(category)" 
-        />
-      </van-grid>
+          class="category-item"
+          @click="goToCategory(category)"
+        >
+          <div class="category-icon">
+            <img :src="category.icon" :alt="category.name" />
+          </div>
+          <div class="category-name">{{ category.name }}</div>
+        </div>
+      </div>
     </div>
 
     <!-- 商品标签页 -->
@@ -213,6 +238,43 @@ onMounted(() => {
 
 .category-container {
   margin-bottom: 10px;
+  padding: 10px;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.category-item:hover {
+  transform: scale(1.05);
+}
+
+.category-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 5px;
+}
+
+.category-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.category-name {
+  font-size: 12px;
+  text-align: center;
+  color: #333;
 }
 
 .product-list {
