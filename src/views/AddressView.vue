@@ -158,6 +158,11 @@ const areaText = computed(() => {
   return '';
 });
 
+// 打开地区选择器
+const openAreaPicker = () => {
+  showAreaPicker.value = true;
+};
+
 // 保存地址到本地存储
 const saveAddressesToStorage = () => {
   localStorage.setItem('userAddresses', JSON.stringify(addresses.value));
@@ -286,73 +291,21 @@ const saveAddress = () => {
 // 地区选择确认
 const onAreaConfirm = (values) => {
   try {
-    // 添加更详细的调试信息
     console.log('地区选择值:', values);
-    console.log(values.selectedOptions[0].text);
-    console.log(values.selectedOptions[1].text);
-    console.log(values.selectedOptions[2].text);
-    
-    console.log('地区选择值类型:', typeof values);
-    console.log('是否为数组:', Array.isArray(values));
-    if (Array.isArray(values)) {
-      console.log('数组长度:', values.length);
-      values.forEach((item, index) => {
-        console.log(`第${index+1}项:`, item, '类型:', typeof item);
-      });
-    }
     
     // 处理空值情况
-    if (!values) {
+    if (!values || !values.selectedOptions || values.selectedOptions.length === 0) {
       console.error('地区选择值为空');
       showFailToast('请选择地区');
       return;
     }
     
-    // 确保values是数组
-    if (!Array.isArray(values)) {
-      // 尝试处理可能的非数组情况
-      if (typeof values === 'object') {
-        // 如果是单个对象，尝试提取省市区信息
-        const province = values.selectedOptions[0].text || values.province || '';
-        const city = values.selectedOptions[1].text || values.city || '';
-        const county = values.selectedOptions[2].text || values.county || '';
-        
-        addressForm.province = province;
-        addressForm.city = city;
-        addressForm.county = county;
-        
-        if (province || city || county) {
-          showSuccessToast('地区选择完成');
-          showAreaPicker.value = false;
-          return;
-        } else {
-          showFailToast('地区信息不完整');
-          return;
-        }
-      } else {
-        console.error('地区选择数据格式错误:', values);
-        showFailToast('地区选择数据格式错误');
-        return;
-      }
-    }
+    const selectedOptions = values.selectedOptions;
     
-    // 处理数组情况
-    let province = '', city = '', county = '';
-    
-    // 适配不同的数据结构
-    if (values.length > 0) {
-      if (values[0] && typeof values[0] === 'object') {
-        // 尝试所有可能的属性名
-        province = values[0].name || values[0].text || values[0].label || values[0].value || '';
-        city = values[1]?.name || values[1]?.text || values[1]?.label || values[1]?.value || '';
-        county = values[2]?.name || values[2]?.text || values[2]?.label || values[2]?.value || '';
-      } else if (typeof values[0] === 'string') {
-        // 如果是字符串数组，直接使用
-        province = values[0] || '';
-        city = values[1] || '';
-        county = values[2] || '';
-      }
-    }
+    // 提取省市区信息
+    const province = selectedOptions[0]?.text || '';
+    const city = selectedOptions[1]?.text || '';
+    const county = selectedOptions[2]?.text || '';
     
     console.log('解析的地区值:', { province, city, county });
     
@@ -361,8 +314,8 @@ const onAreaConfirm = (values) => {
     addressForm.city = city;
     addressForm.county = county;
     
-    // 只要有一个值存在，就认为选择了地区
-    if (province || city || county) {
+    // 只要有省份信息就认为选择成功
+    if (province) {
       showSuccessToast('地区选择完成');
     } else {
       showFailToast('请选择地区');
