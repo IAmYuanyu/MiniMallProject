@@ -29,6 +29,12 @@ const finished = ref(false)
 const activeTab = ref(0)
 const tabs = ref(['全部', '菜谱', '早餐', '休闲', '人气'])
 
+// 检查登录状态
+const checkLoginStatus = () => {
+  const userInfo = localStorage.getItem('userInfo')
+  return userInfo && userInfo !== 'null'
+}
+
 // 获取轮播图数据
 const getBanners = async () => {
   try {
@@ -91,6 +97,14 @@ const onSearch = async () => {
 
 // 添加到购物车
 const addToCart = async (product) => {
+  // 检查登录状态
+  if (!checkLoginStatus()) {
+    showToast('请先登录')
+    // 跳转到个人中心页面
+    router.push('/profile')
+    return
+  }
+  
   try {
     const res = await axios.post('/cart/add', {
       productId: product.id,

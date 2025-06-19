@@ -61,7 +61,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { showToast } from 'vant'
 import axios from 'axios'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 // 导入图标
 import 餐饮美食Icon from '@/assets/icons/餐饮美食.svg'
@@ -77,6 +77,7 @@ import 时令水果Icon from '@/assets/icons/时令水果.svg'
 
 // 获取路由实例和参数
 const route = useRoute()
+const router = useRouter()
 
 // 状态变量
 const categories = ref([])
@@ -86,6 +87,12 @@ const loading = ref(false)
 const finished = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
+
+// 检查登录状态
+const checkLoginStatus = () => {
+  const userInfo = localStorage.getItem('userInfo')
+  return userInfo && userInfo !== 'null'
+}
 
 // 计算当前选中的分类
 const currentCategory = computed(() => {
@@ -188,6 +195,14 @@ const onLoad = () => {
 
 // 添加到购物车
 const addToCart = async (product) => {
+  // 检查登录状态
+  if (!checkLoginStatus()) {
+    showToast('请先登录')
+    // 跳转到个人中心页面
+    router.push('/profile')
+    return
+  }
+  
   try {
     const response = await axios.post('/cart/add', {
       productId: product.id,
